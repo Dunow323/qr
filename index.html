@@ -14,13 +14,14 @@ body{
  margin:0;
 }
 
-/* 상단 이미지 */
+/* 상단 */
 .header-img{
  width:100%;
  max-height:160px;
  object-fit:cover;
 }
 
+/* 레이아웃 */
 .wrap{
  max-width:700px;
  margin:auto;
@@ -58,23 +59,24 @@ button{
  border:none;
  border-radius:6px;
  padding:6px 10px;
+ cursor:pointer;
 }
 
-/* 🔥 하단 장바구니 버튼 */
-.cart-float{
+button:active{transform:scale(0.95);}
+
+/* 장바구니 버튼 */
+.cart-btn{
  position:fixed;
  bottom:20px;
  left:50%;
  transform:translateX(-50%);
- background:#2F6F2F;
- color:white;
  padding:14px 20px;
  border-radius:30px;
  font-weight:bold;
 }
 
-/* 🔥 모달 */
-#cartModal{
+/* 모달 */
+#modal{
  position:fixed;
  top:0;
  left:0;
@@ -82,8 +84,8 @@ button{
  height:100%;
  background:rgba(0,0,0,0.5);
  display:none;
- align-items:center;
  justify-content:center;
+ align-items:center;
 }
 
 .modal-box{
@@ -94,7 +96,6 @@ button{
  padding:20px;
 }
 
-/* 장바구니 */
 .cart-item{
  display:flex;
  justify-content:space-between;
@@ -115,8 +116,8 @@ button{
  height:100%;
  background:rgba(0,0,0,0.4);
  display:none;
- align-items:center;
  justify-content:center;
+ align-items:center;
 }
 </style>
 </head>
@@ -127,23 +128,22 @@ button{
 
 <div class="wrap">
 
-<input id="customerName" placeholder="이름 입력" style="margin:14px;width:90%;padding:10px">
+<input id="name" placeholder="이름 입력" style="margin:14px;width:90%;padding:10px">
 
-<div id="menuList"></div>
+<div id="menu"></div>
 
 </div>
 
-<!-- 🔥 떠있는 장바구니 버튼 -->
-<button class="cart-float" onclick="openCart()">🛒 장바구니</button>
+<button class="cart-btn" onclick="openCart()">🛒 장바구니</button>
 
-<!-- 🔥 모달 -->
-<div id="cartModal">
+<!-- 모달 -->
+<div id="modal">
  <div class="modal-box">
    <h3>장바구니</h3>
    <div id="cart"></div>
    <p>총액: <span id="total">0</span>원</p>
 
-   <button onclick="submitOrder()">주문하기</button>
+   <button onclick="order()">주문하기</button>
    <button onclick="closeCart()">닫기</button>
  </div>
 </div>
@@ -152,95 +152,99 @@ button{
 
 <script>
 
-const categories = [
-{ name:"음료", items:[
-["아메리카노",2500],
-["아이스티",2500]
-]}
-];
-
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzFM-gBnXkLXqmzMqd_xtQrawiHmF4umRvln3Zg9n0nEJfcuYeVazIFA8zEBoTFrdV-/exec";
+
+const categories=[
+{
+ name:"⭐ 음료",
+ items:[
+ ["아메리카노",2500],
+ ["아이스티",2500],
+ ["콜라",2000]
+ ]
+}
+];
 
 const cart={};
 
-function renderMenus(){
- const box=document.getElementById("menuList");
+function renderMenu(){
+ let html="";
 
  categories.forEach(cat=>{
-  box.innerHTML += `<div class="category-box"><div class="category-title">${cat.name}</div>`;
+  html+=`<div class="category-box"><div class="category-title">${cat.name}</div>`;
 
   cat.items.forEach(m=>{
-   box.innerHTML += `
-    <div class="menu">
-     <span>${m[0]} (${m[1]}원)</span>
-     <button onclick="addItem('${m[0]}',${m[1]})">담기</button>
-    </div>`;
+   html+=`
+   <div class="menu">
+    <span>${m[0]} (${m[1]}원)</span>
+    <button onclick="add('${m[0]}',${m[1]})">담기</button>
+   </div>`;
   });
 
-  box.innerHTML += `</div>`;
+  html+=`</div>`;
  });
+
+ document.getElementById("menu").innerHTML=html;
 }
 
-function addItem(name,price){
+function add(name,price){
  if(!cart[name]) cart[name]={qty:0,price:price};
  cart[name].qty++;
- renderCart();
+ drawCart();
 }
 
-function renderCart(){
+function drawCart(){
  let html="";
  let total=0;
 
- for(const item in cart){
-   const data=cart[item];
-   const sum=data.qty * data.price;
-   total += sum;
+ for(let k in cart){
+  let d=cart[k];
+  let sum=d.qty*d.price;
+  total+=sum;
 
-   html += `
-   <div class="cart-item">
-     <span>${item}</span>
-
-     <div class="cart-controls">
-       <button onclick="changeQty('${item}',-1)">-</button>
-       ${data.qty}
-       <button onclick="changeQty('${item}',1)">+</button>
-       <button onclick="removeItem('${item}')">❌</button>
-     </div>
-
-     <span>${sum}원</span>
-   </div>`;
+  html+=`
+  <div class="cart-item">
+   <span>${k}</span>
+   <div class="cart-controls">
+    <button onclick="qty('${k}',-1)">-</button>
+    ${d.qty}
+    <button onclick="qty('${k}',1)">+</button>
+    <button onclick="del('${k}')">❌</button>
+   </div>
+   <span>${sum}원</span>
+  </div>`;
  }
 
  document.getElementById("cart").innerHTML=html;
  document.getElementById("total").innerText=total;
 }
 
-function changeQty(name,delta){
- cart[name].qty += delta;
- if(cart[name].qty <= 0) delete cart[name];
- renderCart();
+function qty(name,n){
+ cart[name].qty+=n;
+ if(cart[name].qty<=0) delete cart[name];
+ drawCart();
 }
 
-function removeItem(name){
+function del(name){
  delete cart[name];
- renderCart();
+ drawCart();
 }
 
 function openCart(){
- document.getElementById("cartModal").style.display="flex";
- renderCart();
+ document.getElementById("modal").style.display="flex";
+ drawCart();
 }
 
 function closeCart(){
- document.getElementById("cartModal").style.display="none";
+ document.getElementById("modal").style.display="none";
 }
 
-function submitOrder(){
+function order(){
 
- const name=document.getElementById("customerName").value;
+ const name=document.getElementById("name").value;
 
- if(!name){ alert("이름 입력"); return; }
- if(Object.keys(cart).length===0){ alert("비어있음"); return; }
+ if(!name){alert("이름 입력");return;}
+ if(Object.keys(cart).length==0){alert("비어있음");return;}
 
  document.getElementById("loading").style.display="flex";
 
@@ -251,13 +255,13 @@ function submitOrder(){
  });
 
  setTimeout(()=>{
-   document.getElementById("loading").style.display="none";
-   alert("주문 완료!");
-   closeCart();
+  document.getElementById("loading").style.display="none";
+  alert("주문 완료!");
+  closeCart();
  },1000);
 }
 
-renderMenus();
+renderMenu();
 
 </script>
 
