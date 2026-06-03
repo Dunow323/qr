@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
 
+<title>QR 주문</title>
+
 <style>
+
+/* 다크모드 차단 */
 html { color-scheme: light; }
 
 body{
@@ -15,43 +19,72 @@ body{
  color:#000;
 }
 
+/* 상단 이미지 */
 .header-img{
  width:100%;
  max-height:160px;
  object-fit:cover;
 }
 
-.wrap{max-width:700px;margin:auto}
+.wrap{
+ max-width:700px;
+ margin:auto;
+ padding-bottom:100px;
+}
 
-.card{
+/* 카테고리 박스 */
+.category-box{
  background:#fff;
- margin:12px;
- padding:16px;
- border-radius:14px;
+ margin:14px;
+ border-radius:16px;
+ overflow:hidden;
+ box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
 
-.category{
- margin:16px;
+/* 카테고리 제목 */
+.category-title{
+ background:#2F6F2F;
+ color:white;
+ padding:12px;
  font-weight:bold;
- color:#2F6F2F;
 }
 
+/* 메뉴 */
 .menu{
  display:flex;
  justify-content:space-between;
- padding:10px;
+ padding:12px;
  border-bottom:1px solid #eee;
 }
 
+.menu:last-child{
+ border-bottom:none;
+}
+
+/* 버튼 */
 button{
  background:#2F6F2F;
- color:#fff;
+ color:white;
  border:none;
  border-radius:8px;
  padding:6px 10px;
+ font-weight:bold;
+ cursor:pointer;
 }
 
-button:active{transform:scale(0.95);}
+button:active{
+ transform:scale(0.95);
+}
+
+/* 장바구니 */
+.cart-box{
+ background:#fff;
+ margin:14px;
+ padding:16px;
+ border-radius:16px;
+ border:2px solid #2F6F2F;
+ box-shadow:0 6px 15px rgba(0,0,0,0.1);
+}
 
 .cart-item{
  display:flex;
@@ -59,12 +92,32 @@ button:active{transform:scale(0.95);}
  margin:6px 0;
 }
 
+.total{
+ font-size:18px;
+ font-weight:bold;
+ margin-top:10px;
+}
+
 .cartbtn{
  width:100%;
  padding:14px;
  font-size:18px;
+ margin-top:10px;
 }
 
+/* 입력 */
+.input-box{
+ margin:14px;
+}
+
+input{
+ width:100%;
+ padding:10px;
+ border-radius:8px;
+ border:1px solid #ddd;
+}
+
+/* 로딩 */
 #loading{
  position:fixed;
  top:0;
@@ -75,19 +128,22 @@ button:active{transform:scale(0.95);}
  display:none;
  align-items:center;
  justify-content:center;
+ z-index:999;
 }
 
 #loading div{
  background:white;
- padding:20px;
- border-radius:10px;
+ padding:20px 30px;
+ border-radius:12px;
+ font-weight:bold;
 }
 
-/* 다크모드 방지 */
+/* 다크모드 강제 무시 */
 @media (prefers-color-scheme: dark) {
  body { background:#FFF9D6 !important; color:#000 !important; }
- .card { background:#fff !important; }
+ .category-box, .cart-box { background:#fff !important; }
 }
+
 </style>
 </head>
 
@@ -97,17 +153,18 @@ button:active{transform:scale(0.95);}
 
 <div class="wrap">
 
-<div class="card">
+<div class="input-box">
 <input id="customerName" placeholder="이름 입력">
 </div>
 
 <div id="menuList"></div>
 
-<div class="card">
+<div class="cart-box">
 <h3>🛒 장바구니</h3>
 <div id="cart"></div>
-<hr>
-<p><b>총액: <span id="total">0</span>원</b></p>
+
+<p class="total">총액: <span id="total">0</span>원</p>
+
 <button class="cartbtn" onclick="confirmOrder()">주문하기</button>
 </div>
 
@@ -118,15 +175,51 @@ button:active{transform:scale(0.95);}
 <script>
 
 const categories = [
-{ name:"⭐ 음료", items:[
-["아이스아메리카노",2500],
-["아이스티",2500],
-["말차라떼",3500]
-]},
-{ name:"⭐ 식사", items:[
-["김치볶음밥",5000],
-["치킨마요",4500]
-]}
+{
+ name:"⭐ 음료",
+ items:[
+ ["아이스아메리카노",2500],
+ ["아이스티(복숭아)",2500],
+ ["말차라떼",3500],
+ ["초코라떼",3500],
+ ["자몽에이드",4000],
+ ["청포도에이드",4000],
+ ["레몬에이드",4000],
+ ["얼박사",3000],
+ ["핫식스",3000],
+ ["콜라",2000],
+ ["사이다",2000]
+ ]
+},
+{
+ name:"⭐ 식사",
+ items:[
+ ["새우볶음밥",5000],
+ ["김치볶음밥",5000],
+ ["스팸마요",4500],
+ ["치킨마요",4500],
+ ["간계밥",4000],
+ ["육개장",6000],
+ ["짜파게티",4000],
+ ["불닭",4000]
+ ]
+},
+{
+ name:"⭐ 핫도그",
+ items:[
+ ["핫도그(치즈)",3000],
+ ["핫도그(칠리)",3000],
+ ["핫도그(어니언)",3000]
+ ]
+},
+{
+ name:"⭐ 디저트",
+ items:[
+ ["맥모닝",3500],
+ ["크로크무슈",4000],
+ ["와플",3500]
+ ]
+}
 ];
 
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbw6iWx8S79kqUS3QpCpsRaMym4XDqSmBLDK7mh19MqVyEg7dX4Hcbbxa8hWfEONnjWb/exec";
@@ -137,7 +230,7 @@ function renderMenus(){
  const box=document.getElementById("menuList");
 
  categories.forEach(cat=>{
-  box.innerHTML += `<div class="category">${cat.name}</div>`;
+  box.innerHTML += `<div class="category-box"><div class="category-title">${cat.name}</div>`;
 
   cat.items.forEach(m=>{
    box.innerHTML += `
@@ -146,6 +239,8 @@ function renderMenus(){
      <button onclick="addItem('${m[0]}',${m[1]})">담기</button>
     </div>`;
   });
+
+  box.innerHTML += `</div>`;
  });
 }
 
@@ -176,14 +271,14 @@ function renderCart(){
  document.getElementById("total").innerText=total;
 }
 
-/* 🔥 확인 단계 */
 function confirmOrder(){
+
  if(Object.keys(cart).length===0){
-   alert("장바구니가 비어있음");
+   alert("장바구니 비어있음");
    return;
  }
 
- if(!confirm("이대로 주문할까요?")){
+ if(!confirm("장바구니 확인 후 주문하시겠습니까?")){
    return;
  }
 
@@ -197,7 +292,7 @@ function submitOrder(){
  fetch(SCRIPT_URL,{
    method:"POST",
    mode:"no-cors",
-   body:JSON.stringify({items:cart})
+   body:JSON.stringify(cart)
  });
 
  const orderNo="A"+(Math.floor(Math.random()*900)+100);
