@@ -21,7 +21,6 @@ body{
  object-fit:cover;
 }
 
-/* 레이아웃 */
 .wrap{
  max-width:700px;
  margin:auto;
@@ -52,17 +51,24 @@ body{
  border-bottom:1px solid #eee;
 }
 
-/* 버튼 */
+/* 🔥 버튼 */
 button{
  background:#2F6F2F;
  color:white;
  border:none;
- border-radius:6px;
- padding:6px 10px;
+ border-radius:8px;
+ padding:6px 12px;
  cursor:pointer;
+ transition:0.15s;
 }
 
-/* 하단 장바구니 버튼 */
+/* 🔥 눌림 효과 */
+button:active{
+ transform:scale(0.92);
+ background:#245a24;
+}
+
+/* 장바구니 버튼 */
 .cart-btn{
  position:fixed;
  bottom:20px;
@@ -73,7 +79,7 @@ button{
  font-weight:bold;
 }
 
-/* 🔥 모달 */
+/* 모달 */
 #modal{
  position:fixed;
  top:0;
@@ -147,12 +153,10 @@ button{
  </div>
 </div>
 
-<!-- 로딩 -->
 <div id="loading"><div style="background:white;padding:20px;">주문중...</div></div>
 
 <script>
 
-// 🔥 Apps Script URL
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzFM-gBnXkLXqmzMqd_xtQrawiHmF4umRvln3Zg9n0nEJfcuYeVazIFA8zEBoTFrdV-/exec";
 
 // 🔥 전체 메뉴
@@ -162,6 +166,13 @@ const categories = [
  items:[
  ["아이스아메리카노",2500],
  ["아이스티(복숭아)",2500],
+ ["말차라떼",3500],
+ ["초코라떼",3500],
+ ["자몽에이드",4000],
+ ["청포도에이드",4000],
+ ["레몬에이드",4000],
+ ["얼박사",3000],
+ ["핫식스",3000],
  ["콜라",2000],
  ["사이다",2000]
  ]
@@ -169,15 +180,37 @@ const categories = [
 {
  name:"⭐ 식사",
  items:[
+ ["새우볶음밥",5000],
  ["김치볶음밥",5000],
- ["치킨마요",4500]
+ ["스팸마요",4500],
+ ["치킨마요",4500],
+ ["간계밥",4000],
+ ["육개장",6000],
+ ["짜파게티",4000],
+ ["불닭",4000]
+ ]
+},
+{
+ name:"⭐ 핫도그",
+ items:[
+ ["핫도그(치즈)",3000],
+ ["핫도그(칠리)",3000],
+ ["핫도그(어니언)",3000]
+ ]
+},
+{
+ name:"⭐ 디저트",
+ items:[
+ ["맥모닝",3500],
+ ["크로크무슈",4000],
+ ["와플",3500]
  ]
 }
 ];
 
 const cart={};
 
-// 메뉴 출력
+// 메뉴 렌더
 function renderMenu(){
  let html="";
 
@@ -204,7 +237,7 @@ function add(name,price){
  cart[name].qty++;
 }
 
-// 장바구니 그리기
+// 장바구니
 function drawCart(){
  let html="";
  let total=0;
@@ -231,31 +264,26 @@ function drawCart(){
  document.getElementById("total").innerText=total;
 }
 
-// 수량
 function qty(name,n){
  cart[name].qty+=n;
  if(cart[name].qty<=0) delete cart[name];
  drawCart();
 }
 
-// 삭제
 function del(name){
  delete cart[name];
  drawCart();
 }
 
-// 모달 열기
 function openCart(){
  document.getElementById("modal").style.display="flex";
  drawCart();
 }
 
-// 닫기
 function closeCart(){
  document.getElementById("modal").style.display="none";
 }
 
-// 주문
 function order(){
 
  const name=document.getElementById("name").value;
@@ -268,10 +296,7 @@ function order(){
  fetch(SCRIPT_URL,{
    method:"POST",
    mode:"no-cors",
-   body:JSON.stringify({
-     customer:name,
-     items:cart
-   })
+   body:JSON.stringify({customer:name,items:cart})
  });
 
  setTimeout(()=>{
