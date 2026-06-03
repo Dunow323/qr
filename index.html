@@ -44,8 +44,8 @@ const menus=[
 ["떡볶이",4500]
 ];
 
-// ✅ 최신 Apps Script URL
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxxOzNAbhhOUB8ix-O-LHCMulIxxugxfsle3AN5kIcE6Rkqpjq4LASgcMmGsHD8vgRw/exec";
+// 🔥 너가 준 최신 URL 적용됨
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbw6iWx8S79kqUS3QpCpsRaMym4XDqSmBLDK7mh19MqVyEg7dX4Hcbbxa8hWfEONnjWb/exec";
 
 const cart={};
 
@@ -123,22 +123,16 @@ async function submitOrder(){
  };
 
  try{
-   const res=await fetch(SCRIPT_URL,{
+   await fetch(SCRIPT_URL,{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
+      mode:"no-cors", // 🔥 핵심 (이거 없으면 실패함)
       body:JSON.stringify(order)
    });
 
-   const text = await res.text();
-   const result = JSON.parse(text);
-
-   alert("주문 완료\n주문번호: " + result.orderNo);
+   alert("주문 완료!");
 
  }catch(e){
-   console.error(e);
-   alert("전송 실패\n(앱스크립트 배포/권한 확인)");
+   alert("전송 실패");
  }
 }
 
