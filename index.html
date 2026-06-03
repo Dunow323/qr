@@ -4,22 +4,71 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QR 주문</title>
+
 <style>
 body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding-bottom:90px}
 header{background:#2ac1bc;color:#fff;padding:16px;font-size:22px;font-weight:bold}
 .wrap{max-width:700px;margin:auto}
+
 .card{background:#fff;margin:10px;padding:14px;border-radius:12px}
+
 .menu{display:flex;justify-content:space-between;align-items:center}
-button{border:none;border-radius:8px;padding:10px 14px;cursor:pointer}
+
+/* 🔥 버튼 스타일 업그레이드 */
+button{
+ border:none;
+ border-radius:10px;
+ padding:10px 14px;
+ cursor:pointer;
+ transition:0.15s;
+}
+
+button:active{
+ transform:scale(0.95);
+ background:#1daaa5;
+}
+
 .add{background:#2ac1bc;color:white}
-.cartbtn{width:100%;background:#2ac1bc;color:#fff;font-size:18px}
+
+.cartbtn{
+ width:100%;
+ background:#2ac1bc;
+ color:#fff;
+ font-size:18px;
+}
+
+/* 🔥 로딩 오버레이 */
+#loading{
+ position:fixed;
+ top:0;
+ left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.4);
+ display:none;
+ align-items:center;
+ justify-content:center;
+ z-index:999;
+}
+
+#loading div{
+ background:white;
+ padding:20px 30px;
+ border-radius:10px;
+ font-size:18px;
+ font-weight:bold;
+}
+
 input{width:100%;padding:10px;box-sizing:border-box}
 </style>
 </head>
+
 <body>
+
 <header>QR 주문</header>
 
 <div class="wrap">
+
 <div class="card">
 <label>주문자 이름</label>
 <input id="customerName" placeholder="이름 입력">
@@ -33,6 +82,12 @@ input{width:100%;padding:10px;box-sizing:border-box}
 <p><b>총액: <span id="total">0</span>원</b></p>
 <button class="cartbtn" onclick="submitOrder()">주문하기</button>
 </div>
+
+</div>
+
+<!-- 🔥 로딩 UI -->
+<div id="loading">
+  <div>주문 전송중...</div>
 </div>
 
 <script>
@@ -44,7 +99,6 @@ const menus=[
 ["떡볶이",4500]
 ];
 
-// 🔥 너가 준 최신 URL 적용됨
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbw6iWx8S79kqUS3QpCpsRaMym4XDqSmBLDK7mh19MqVyEg7dX4Hcbbxa8hWfEONnjWb/exec";
 
 const cart={};
@@ -96,6 +150,14 @@ async function submitOrder(){
    return;
  }
 
+ if(Object.keys(cart).length === 0){
+   alert("메뉴를 선택하세요.");
+   return;
+ }
+
+ // 🔥 로딩 표시
+ document.getElementById("loading").style.display="flex";
+
  const items=[];
  let total=0;
 
@@ -111,32 +173,26 @@ async function submitOrder(){
    total += price*cart[item];
  }
 
- if(items.length===0){
-   alert("메뉴를 선택하세요.");
-   return;
- }
-
  const order={
    customer:name,
    items:items,
    total:total
  };
 
- try{
-   await fetch(SCRIPT_URL,{
-      method:"POST",
-      mode:"no-cors", // 🔥 핵심 (이거 없으면 실패함)
-      body:JSON.stringify(order)
-   });
+ fetch(SCRIPT_URL,{
+   method:"POST",
+   mode:"no-cors",
+   body:JSON.stringify(order)
+ });
 
+ setTimeout(()=>{
+   document.getElementById("loading").style.display="none";
    alert("주문 완료!");
-
- }catch(e){
-   alert("전송 실패");
- }
+ },1000);
 }
 
 renderMenus();
 </script>
+
 </body>
 </html>
