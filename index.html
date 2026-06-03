@@ -14,7 +14,7 @@ body{
  margin:0;
 }
 
-/* 상단 */
+/* 상단 이미지 */
 .header-img{
  width:100%;
  max-height:160px;
@@ -62,9 +62,7 @@ button{
  cursor:pointer;
 }
 
-button:active{transform:scale(0.95);}
-
-/* 장바구니 버튼 */
+/* 하단 장바구니 버튼 */
 .cart-btn{
  position:fixed;
  bottom:20px;
@@ -75,7 +73,7 @@ button:active{transform:scale(0.95);}
  font-weight:bold;
 }
 
-/* 모달 */
+/* 🔥 모달 */
 #modal{
  position:fixed;
  top:0;
@@ -96,6 +94,7 @@ button:active{transform:scale(0.95);}
  padding:20px;
 }
 
+/* 장바구니 */
 .cart-item{
  display:flex;
  justify-content:space-between;
@@ -148,25 +147,37 @@ button:active{transform:scale(0.95);}
  </div>
 </div>
 
+<!-- 로딩 -->
 <div id="loading"><div style="background:white;padding:20px;">주문중...</div></div>
 
 <script>
 
+// 🔥 Apps Script URL
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzFM-gBnXkLXqmzMqd_xtQrawiHmF4umRvln3Zg9n0nEJfcuYeVazIFA8zEBoTFrdV-/exec";
 
-const categories=[
+// 🔥 전체 메뉴
+const categories = [
 {
  name:"⭐ 음료",
  items:[
- ["아메리카노",2500],
- ["아이스티",2500],
- ["콜라",2000]
+ ["아이스아메리카노",2500],
+ ["아이스티(복숭아)",2500],
+ ["콜라",2000],
+ ["사이다",2000]
+ ]
+},
+{
+ name:"⭐ 식사",
+ items:[
+ ["김치볶음밥",5000],
+ ["치킨마요",4500]
  ]
 }
 ];
 
 const cart={};
 
+// 메뉴 출력
 function renderMenu(){
  let html="";
 
@@ -187,12 +198,13 @@ function renderMenu(){
  document.getElementById("menu").innerHTML=html;
 }
 
+// 담기
 function add(name,price){
  if(!cart[name]) cart[name]={qty:0,price:price};
  cart[name].qty++;
- drawCart();
 }
 
+// 장바구니 그리기
 function drawCart(){
  let html="";
  let total=0;
@@ -219,39 +231,47 @@ function drawCart(){
  document.getElementById("total").innerText=total;
 }
 
+// 수량
 function qty(name,n){
  cart[name].qty+=n;
  if(cart[name].qty<=0) delete cart[name];
  drawCart();
 }
 
+// 삭제
 function del(name){
  delete cart[name];
  drawCart();
 }
 
+// 모달 열기
 function openCart(){
  document.getElementById("modal").style.display="flex";
  drawCart();
 }
 
+// 닫기
 function closeCart(){
  document.getElementById("modal").style.display="none";
 }
 
+// 주문
 function order(){
 
  const name=document.getElementById("name").value;
 
  if(!name){alert("이름 입력");return;}
- if(Object.keys(cart).length==0){alert("비어있음");return;}
+ if(Object.keys(cart).length===0){alert("장바구니 비어있음");return;}
 
  document.getElementById("loading").style.display="flex";
 
  fetch(SCRIPT_URL,{
    method:"POST",
    mode:"no-cors",
-   body:JSON.stringify({customer:name,items:cart})
+   body:JSON.stringify({
+     customer:name,
+     items:cart
+   })
  });
 
  setTimeout(()=>{
