@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR 주문</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding-bottom:90px}
+header{background:#2ac1bc;color:#fff;padding:16px;font-size:22px;font-weight:bold}
+.wrap{max-width:700px;margin:auto}
+.card{background:#fff;margin:10px;padding:14px;border-radius:12px}
+.menu{display:flex;justify-content:space-between;align-items:center}
+button{border:none;border-radius:8px;padding:10px 14px;cursor:pointer}
+.add{background:#2ac1bc;color:white}
+.cartbtn{width:100%;background:#2ac1bc;color:#fff;font-size:18px}
+input{width:100%;padding:10px;box-sizing:border-box}
+</style>
+</head>
+<body>
+<header>QR 주문</header>
+
+<div class="wrap">
+<div class="card">
+<label>주문자 이름</label>
+<input id="customerName" placeholder="이름 입력">
+</div>
+
+<div id="menuList"></div>
+
+<div class="card">
+<h3>장바구니</h3>
+<div id="cart"></div>
+<p><b>총액: <span id="total">0</span>원</b></p>
+<button class="cartbtn" onclick="submitOrder()">주문하기</button>
+</div>
+</div>
+
+<script>
+const menus=[
+["아메리카노",2500],
+["카페라떼",3500],
+["콜라",2000],
+["사이다",2000],
+["떡볶이",4500]
+];
+
+// ✅ 최신 Apps Script URL
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxxOzNAbhhOUB8ix-O-LHCMulIxxugxfsle3AN5kIcE6Rkqpjq4LASgcMmGsHD8vgRw/exec";
+
+const cart={};
+
+function renderMenus(){
+ const box=document.getElementById("menuList");
+ menus.forEach(m=>{
+  box.innerHTML += `
+   <div class="card menu">
+    <div>
+      <div><b>${m[0]}</b></div>
+      <div>${m[1].toLocaleString()}원</div>
+    </div>
+    <button class="add" onclick="addItem('${m[0]}')">담기</button>
+   </div>`;
+ });
+}
+
+function addItem(name){
+ cart[name]=(cart[name]||0)+1;
+ renderCart();
+}
+
+function renderCart(){
+ let html="";
+ let total=0;
+
+ for(const item in cart){
+   const price=menus.find(m=>m[0]===item)[1];
+   total += price*cart[item];
+
+   html += `
+   <div style="display:flex;justify-content:space-between;margin:6px 0">
+     <span>${item} x ${cart[item]}</span>
+     <span>${(price*cart[item]).toLocaleString()}원</span>
+   </div>`;
+ }
+
+ document.getElementById("cart").innerHTML=html;
+ document.getElementById("total").innerText=total.toLocaleString();
+}
+
+async function submitOrder(){
+
+ const name=document.getElementById("customerName").value.trim();
+
+ if(!name){
+   alert("이름을 입력하세요.");
+   return;
+ }
+
+ const items=[];
+ let total=0;
+
+ for(const item in cart){
+   const price=menus.find(m=>m[0]===item)[1];
+
+   items.push({
+      menu:item,
+      qty:cart[item],
+      price:price
+   });
+
+   total += price*cart[item];
+ }
+
+ if(items.length===0){
+   alert("메뉴를 선택하세요.");
+   return;
+ }
+
+ const order={
+   customer:name,
+   items:items,
+   total:total
+ };
+
+ try{
+   const res=await fetch(SCRIPT_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify(order)
+   });
+
+   const text = await res.text();
+   const result = JSON.parse(text);
+
+   alert("주문 완료\n주문번호: " + result.orderNo);
+
+ }catch(e){
+   console.error(e);
+   alert("전송 실패\n(앱스크립트 배포/권한 확인)");
+ }
+}
+
+renderMenus();
+</script>
+</body>
+</html>
