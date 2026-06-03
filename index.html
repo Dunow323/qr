@@ -3,79 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR 주문</title>
+<meta name="color-scheme" content="light">
 
 <style>
+html { color-scheme: light; }
+
 body{
- font-family:Arial,sans-serif;
+ font-family:Arial;
  background:#FFF9D6;
  margin:0;
- padding-bottom:90px;
+ color:#000;
 }
 
-/* 상단 이미지 */
 .header-img{
  width:100%;
  max-height:160px;
  object-fit:cover;
 }
 
-/* 전체 영역 */
 .wrap{max-width:700px;margin:auto}
 
-/* 카드 */
 .card{
  background:#fff;
  margin:12px;
  padding:16px;
  border-radius:14px;
- box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* 메뉴 */
+.category{
+ margin:16px;
+ font-weight:bold;
+ color:#2F6F2F;
+}
+
 .menu{
  display:flex;
  justify-content:space-between;
- align-items:center;
+ padding:10px;
+ border-bottom:1px solid #eee;
 }
 
-/* 버튼 */
 button{
- border:none;
- border-radius:10px;
- padding:10px 14px;
- cursor:pointer;
- transition:0.15s;
- font-weight:bold;
-}
-
-button:active{
- transform:scale(0.95);
- background:#245a24;
-}
-
-.add{
  background:#2F6F2F;
- color:white;
+ color:#fff;
+ border:none;
+ border-radius:8px;
+ padding:6px 10px;
+}
+
+button:active{transform:scale(0.95);}
+
+.cart-item{
+ display:flex;
+ justify-content:space-between;
+ margin:6px 0;
 }
 
 .cartbtn{
  width:100%;
- background:#2F6F2F;
- color:#fff;
+ padding:14px;
  font-size:18px;
 }
 
-/* 입력 */
-input{
- width:100%;
- padding:10px;
- box-sizing:border-box;
- border-radius:8px;
- border:1px solid #ddd;
-}
-
-/* 로딩 */
 #loading{
  position:fixed;
  top:0;
@@ -86,54 +75,58 @@ input{
  display:none;
  align-items:center;
  justify-content:center;
- z-index:999;
 }
 
 #loading div{
  background:white;
- padding:20px 30px;
- border-radius:12px;
- font-size:18px;
- font-weight:bold;
+ padding:20px;
+ border-radius:10px;
+}
+
+/* 다크모드 방지 */
+@media (prefers-color-scheme: dark) {
+ body { background:#FFF9D6 !important; color:#000 !important; }
+ .card { background:#fff !important; }
 }
 </style>
 </head>
 
 <body>
 
-<!-- 🔥 여기 이미지 적용됨 -->
 <img src="https://raw.githubusercontent.com/Dunow323/qr/main/KakaoTalk_20260603_181532728.png" class="header-img">
 
 <div class="wrap">
 
 <div class="card">
-<label><b>주문자 이름</b></label>
 <input id="customerName" placeholder="이름 입력">
 </div>
 
 <div id="menuList"></div>
 
 <div class="card">
-<h3>장바구니</h3>
+<h3>🛒 장바구니</h3>
 <div id="cart"></div>
+<hr>
 <p><b>총액: <span id="total">0</span>원</b></p>
-<button class="cartbtn" onclick="submitOrder()">주문하기</button>
+<button class="cartbtn" onclick="confirmOrder()">주문하기</button>
 </div>
 
 </div>
 
-<!-- 로딩 -->
-<div id="loading">
-  <div>주문 전송중...</div>
-</div>
+<div id="loading"><div>주문 전송중...</div></div>
 
 <script>
-const menus=[
-["아메리카노",2500],
-["카페라떼",3500],
-["콜라",2000],
-["사이다",2000],
-["떡볶이",4500]
+
+const categories = [
+{ name:"⭐ 음료", items:[
+["아이스아메리카노",2500],
+["아이스티",2500],
+["말차라떼",3500]
+]},
+{ name:"⭐ 식사", items:[
+["김치볶음밥",5000],
+["치킨마요",4500]
+]}
 ];
 
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbw6iWx8S79kqUS3QpCpsRaMym4XDqSmBLDK7mh19MqVyEg7dX4Hcbbxa8hWfEONnjWb/exec";
@@ -142,20 +135,23 @@ const cart={};
 
 function renderMenus(){
  const box=document.getElementById("menuList");
- menus.forEach(m=>{
-  box.innerHTML += `
-   <div class="card menu">
-    <div>
-      <div><b>${m[0]}</b></div>
-      <div>${m[1].toLocaleString()}원</div>
-    </div>
-    <button class="add" onclick="addItem('${m[0]}')">담기</button>
-   </div>`;
+
+ categories.forEach(cat=>{
+  box.innerHTML += `<div class="category">${cat.name}</div>`;
+
+  cat.items.forEach(m=>{
+   box.innerHTML += `
+    <div class="menu">
+     <span>${m[0]} (${m[1]}원)</span>
+     <button onclick="addItem('${m[0]}',${m[1]})">담기</button>
+    </div>`;
+  });
  });
 }
 
-function addItem(name){
- cart[name]=(cart[name]||0)+1;
+function addItem(name,price){
+ if(!cart[name]) cart[name]={qty:0,price:price};
+ cart[name].qty++;
  renderCart();
 }
 
@@ -164,70 +160,56 @@ function renderCart(){
  let total=0;
 
  for(const item in cart){
-   const price=menus.find(m=>m[0]===item)[1];
-   total += price*cart[item];
+   const qty = cart[item].qty;
+   const price = cart[item].price;
+   const sum = qty * price;
+   total += sum;
 
    html += `
-   <div style="display:flex;justify-content:space-between;margin:6px 0">
-     <span>${item} x ${cart[item]}</span>
-     <span>${(price*cart[item]).toLocaleString()}원</span>
+   <div class="cart-item">
+     <span>${item} x ${qty}</span>
+     <span>${sum}원</span>
    </div>`;
  }
 
  document.getElementById("cart").innerHTML=html;
- document.getElementById("total").innerText=total.toLocaleString();
+ document.getElementById("total").innerText=total;
+}
+
+/* 🔥 확인 단계 */
+function confirmOrder(){
+ if(Object.keys(cart).length===0){
+   alert("장바구니가 비어있음");
+   return;
+ }
+
+ if(!confirm("이대로 주문할까요?")){
+   return;
+ }
+
+ submitOrder();
 }
 
 function submitOrder(){
 
- const name=document.getElementById("customerName").value.trim();
-
- if(!name){
-   alert("이름을 입력하세요.");
-   return;
- }
-
- if(Object.keys(cart).length === 0){
-   alert("메뉴를 선택하세요.");
-   return;
- }
-
  document.getElementById("loading").style.display="flex";
-
- const items=[];
- let total=0;
-
- for(const item in cart){
-   const price=menus.find(m=>m[0]===item)[1];
-
-   items.push({
-      menu:item,
-      qty:cart[item],
-      price:price
-   });
-
-   total += price*cart[item];
- }
 
  fetch(SCRIPT_URL,{
    method:"POST",
    mode:"no-cors",
-   body:JSON.stringify({
-     customer:name,
-     items:items,
-     total:total
-   })
+   body:JSON.stringify({items:cart})
  });
 
- const orderNo = "A" + (Math.floor(Math.random()*900)+100);
+ const orderNo="A"+(Math.floor(Math.random()*900)+100);
 
  setTimeout(()=>{
    document.getElementById("loading").style.display="none";
-   alert("주문 완료!\n\n주문번호: " + orderNo);
+   alert("주문 완료\n주문번호: "+orderNo);
  },1000);
 }
 
 renderMenus();
+
 </script>
 
 </body>
