@@ -79,7 +79,7 @@ button:active{
  position:relative;
 }
 
-/* 빨간 숫자 */
+/* 🔴 뱃지 */
 .badge{
  position:absolute;
  top:-8px;
@@ -93,9 +93,10 @@ button:active{
  align-items:center;
  justify-content:center;
  font-size:12px;
+ font-weight:bold;
 }
 
-/* 🔥 모달 (버그 해결 핵심) */
+/* 🔥 모달 */
 #modal{
  position:fixed;
  top:0;
@@ -183,21 +184,58 @@ button:active{
 
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzFM-gBnXkLXqmzMqd_xtQrawiHmF4umRvln3Zg9n0nEJfcuYeVazIFA8zEBoTFrdV-/exec";
 
+// 전체 메뉴
 const categories = [
 {
  name:"⭐ 음료",
  items:[
  ["아이스아메리카노",2500],
  ["아이스티(복숭아)",2500],
+ ["말차라떼",3500],
+ ["초코라떼",3500],
+ ["자몽에이드",4000],
+ ["청포도에이드",4000],
+ ["레몬에이드",4000],
+ ["얼박사",3000],
+ ["핫식스",3000],
  ["콜라",2000],
  ["사이다",2000]
+ ]
+},
+{
+ name:"⭐ 식사",
+ items:[
+ ["새우볶음밥",5000],
+ ["김치볶음밥",5000],
+ ["스팸마요",4500],
+ ["치킨마요",4500],
+ ["간계밥",4000],
+ ["육개장",6000],
+ ["짜파게티",4000],
+ ["불닭",4000]
+ ]
+},
+{
+ name:"⭐ 핫도그",
+ items:[
+ ["핫도그(치즈)",3000],
+ ["핫도그(칠리)",3000],
+ ["핫도그(어니언)",3000]
+ ]
+},
+{
+ name:"⭐ 디저트",
+ items:[
+ ["맥모닝",3500],
+ ["크로크무슈",4000],
+ ["와플",3500]
  ]
 }
 ];
 
 const cart={};
 
-// 메뉴
+// 메뉴 렌더
 function renderMenu(){
  let html="";
  categories.forEach(cat=>{
@@ -217,7 +255,9 @@ function renderMenu(){
 // 뱃지
 function updateBadge(){
  let count=0;
- for(let k in cart) count+=cart[k].qty;
+ for(let k in cart){
+  count+=cart[k].qty;
+ }
  document.getElementById("cartCount").innerText=count;
 }
 
@@ -268,12 +308,14 @@ function del(name){
  updateBadge();
 }
 
-// 🔥 모달 제어 (완전 안정)
+// 🔥 핵심: 한 번에 열림 해결
 function openCart(){
  const m=document.getElementById("modal");
+
  m.style.opacity="1";
  m.style.pointerEvents="auto";
- drawCart();
+
+ drawCart(); // 바로 렌더
 }
 
 function closeCart(){
@@ -305,6 +347,7 @@ function order(){
 }
 
 renderMenu();
+drawCart(); // 🔥 초기화 (버그 방지)
 
 </script>
 
