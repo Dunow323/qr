@@ -79,29 +79,23 @@ button:active{
  position:relative;
 }
 
-/* 🔥 빨간 뱃지 */
+/* 빨간 숫자 */
 .badge{
  position:absolute;
  top:-8px;
  right:-10px;
-
  width:20px;
  height:20px;
-
  background:red;
  color:white;
-
  border-radius:50%;
-
  display:flex;
  align-items:center;
  justify-content:center;
-
  font-size:12px;
- font-weight:bold;
 }
 
-/* 모달 */
+/* 🔥 모달 (버그 해결 핵심) */
 #modal{
  position:fixed;
  top:0;
@@ -109,9 +103,14 @@ button:active{
  width:100%;
  height:100%;
  background:rgba(0,0,0,0.5);
- display:none;
+
+ display:flex;
  justify-content:center;
  align-items:center;
+
+ opacity:0;
+ pointer-events:none;
+ transition:0.2s;
 }
 
 .modal-box{
@@ -133,7 +132,6 @@ button:active{
 .cart-controls{
  display:flex;
  gap:5px;
- align-items:center;
 }
 
 /* 로딩 */
@@ -191,51 +189,15 @@ const categories = [
  items:[
  ["아이스아메리카노",2500],
  ["아이스티(복숭아)",2500],
- ["말차라떼",3500],
- ["초코라떼",3500],
- ["자몽에이드",4000],
- ["청포도에이드",4000],
- ["레몬에이드",4000],
- ["얼박사",3000],
- ["핫식스",3000],
  ["콜라",2000],
  ["사이다",2000]
- ]
-},
-{
- name:"⭐ 식사",
- items:[
- ["새우볶음밥",5000],
- ["김치볶음밥",5000],
- ["스팸마요",4500],
- ["치킨마요",4500],
- ["간계밥",4000],
- ["육개장",6000],
- ["짜파게티",4000],
- ["불닭",4000]
- ]
-},
-{
- name:"⭐ 핫도그",
- items:[
- ["핫도그(치즈)",3000],
- ["핫도그(칠리)",3000],
- ["핫도그(어니언)",3000]
- ]
-},
-{
- name:"⭐ 디저트",
- items:[
- ["맥모닝",3500],
- ["크로크무슈",4000],
- ["와플",3500]
  ]
 }
 ];
 
 const cart={};
 
-// 메뉴 렌더
+// 메뉴
 function renderMenu(){
  let html="";
  categories.forEach(cat=>{
@@ -252,12 +214,10 @@ function renderMenu(){
  document.getElementById("menu").innerHTML=html;
 }
 
-// 장바구니 수량 뱃지 업데이트
+// 뱃지
 function updateBadge(){
  let count=0;
- for(let k in cart){
-  count+=cart[k].qty;
- }
+ for(let k in cart) count+=cart[k].qty;
  document.getElementById("cartCount").innerText=count;
 }
 
@@ -268,7 +228,7 @@ function add(name,price){
  updateBadge();
 }
 
-// 장바구니 렌더
+// 장바구니
 function drawCart(){
  let html="";
  let total=0;
@@ -295,7 +255,6 @@ function drawCart(){
  document.getElementById("total").innerText=total;
 }
 
-// 수량 변경
 function qty(name,n){
  cart[name].qty+=n;
  if(cart[name].qty<=0) delete cart[name];
@@ -303,21 +262,24 @@ function qty(name,n){
  updateBadge();
 }
 
-// 삭제
 function del(name){
  delete cart[name];
  drawCart();
  updateBadge();
 }
 
-// 모달
+// 🔥 모달 제어 (완전 안정)
 function openCart(){
- document.getElementById("modal").style.display="flex";
+ const m=document.getElementById("modal");
+ m.style.opacity="1";
+ m.style.pointerEvents="auto";
  drawCart();
 }
 
 function closeCart(){
- document.getElementById("modal").style.display="none";
+ const m=document.getElementById("modal");
+ m.style.opacity="0";
+ m.style.pointerEvents="none";
 }
 
 // 주문
